@@ -88,6 +88,12 @@ def alexnet(x, keep_dropout, train_phase):
 
     # Output FC
     out = tf.add(tf.matmul(fc7, weights['wo']), biases['bo'])
+
+    vars = 0
+    for v in tf.global_variables():
+        vars += np.prod(v.get_shape().as_list())
+
+    print vars 
     
     return out
 

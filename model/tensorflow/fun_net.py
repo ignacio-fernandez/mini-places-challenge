@@ -5,7 +5,7 @@ from tensorflow.contrib.layers.python.layers import batch_norm
 from DataLoader import *
 
 # Dataset Parameters
-batch_size = 128
+batch_size = 32
 load_size = 313
 fine_size = 299
 c = 3
@@ -75,8 +75,7 @@ def fun_net(x, keep_dropout, train_phase):
         'wsc12d': tf.Variable(tf.random_normal([3, 3, 1536, 1], stddev=np.sqrt(2./(3*3*1536)))),
         'wsc12p': tf.Variable(tf.random_normal([1, 1, 1536, 2048], stddev=np.sqrt(2./(1*1*1536)))),
 
-        'wf': tf.Variable(tf.random_normal([2048, 1024], stddev=np.sqrt(2./2048))),
-        'wo': tf.Variable(tf.random_normal([1024, 100], stddev=np.sqrt(2./1024)))
+        'wo': tf.Variable(tf.random_normal([2048, 100], stddev=np.sqrt(2./2048)))
     }
 
     biases = {
@@ -216,9 +215,9 @@ def fun_net(x, keep_dropout, train_phase):
     conv12 = tf.nn.relu(conv12)
 
     dense = tf.reduce_mean(conv12, [1, 2])
-    dense = tf.matmul(dense, weights['wf'])
-    dense = batch_norm_layer(dense, train_phase, 'd')
-    dense = tf.nn.relu(dense)
+    # dense = tf.matmul(dense, weights['wf'])
+    # dense = batch_norm_layer(dense, train_phase, 'd')
+    # dense = tf.nn.relu(dense)
     dense = tf.nn.dropout(dense, keep_dropout)
 
     out = tf.add(tf.matmul(dense, weights['wo']), biases['bo'])
@@ -286,8 +285,12 @@ saver = tf.train.Saver()
 # define summary writer
 #writer = tf.train.SummaryWriter('.', graph=tf.get_default_graph())
 
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+config.gpu_options.allocator_type = 'BFC'
+
 # Launch the graph
-with tf.Session() as sess:
+with tf.Session(config=config) as sess:
     # Initialization
     if len(start_from)>1:
         saver.restore(sess, start_from)
